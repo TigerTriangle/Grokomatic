@@ -3,13 +3,19 @@ using Newtonsoft.Json;
 using System.Text;
 using Grokomatic.Services;
 using Grokomatic;
+using Tweetinvi;
 
 string openAiApiKey;
 string grokApiKey;
 string basePath;
 string txtFile;
+string logFile;
 string pngFile;
 string jpgFile;
+string xConsumerKey;
+string xConsumerSecret;
+string xAccessToken;
+string xAccessTokenSecret;
 
 try
 {
@@ -25,6 +31,8 @@ try
     Utilities.ConvertPngToJpg(pngFile, jpgFile, 80);
 
     // Post text and picture on X
+    await PostOnX(postText, jpgFile);
+
     // Post text and picture on Facebook
     // Append selected innovation to list of completions and write to Completions file
 }
@@ -37,6 +45,10 @@ void Initialize()
 {
     openAiApiKey = Utilities.GetEnvironmentVariable("OPENAI_API_KEY");
     grokApiKey = Utilities.GetEnvironmentVariable("GROK_API_KEY");
+    xConsumerKey = Utilities.GetEnvironmentVariable("X_API_KEY");
+    xConsumerSecret = Utilities.GetEnvironmentVariable("X_API_SECRET");
+    xAccessToken = Utilities.GetEnvironmentVariable("X_ACCESS_TOKEN");
+    xAccessTokenSecret = Utilities.GetEnvironmentVariable("X_ACCESS_TOKEN_SECRET");
 
     basePath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\Grokomatic";
     string fileName = DateTime.Now.ToString("yyyyMMddHHmmss");
@@ -46,6 +58,7 @@ void Initialize()
         Directory.CreateDirectory(basePath);
     }
 
+    logFile = Path.Combine(basePath, $"{fileName}.log");
     txtFile = Path.Combine(basePath, $"{fileName}.txt");
     pngFile = Path.Combine(basePath, $"{fileName}.png");
     jpgFile = Path.Combine(basePath, $"{fileName}.jpg");
@@ -90,7 +103,8 @@ string GeneratePost()
     File.WriteAllText(completionsPath, JsonConvert.SerializeObject(previouslyPosted, Formatting.Indented));
 
     Console.WriteLine("[ASSISTANT]");
-    Console.WriteLine(textForPost);
+    Console.WriteLine(textForPost);    
+    File.AppendAllText(logFile, textForPost);
     return textForPost;
 }
 
@@ -106,6 +120,7 @@ string GenerateImagePrompt(string rawText)
 
     Console.WriteLine("[ASSISTANT]");
     Console.WriteLine(imagePrompt);
+    File.AppendAllText(logFile, imagePrompt);
     return imagePrompt;
 }
 
@@ -121,10 +136,70 @@ async Task GenerateImage(string imagePrompt, string filePath)
     {
         await imageGenerator.GenerateImage(imagePrompt, filePath, openAiApiKey);
         Console.WriteLine($"Image generated successfully and saved to {filePath}");
+        File.AppendAllText(logFile, $"Image generated successfully and saved to {filePath}");
     }
     catch (Exception ex)
     {
         Console.WriteLine($"An error occurred while generating the image: {ex.Message}");
+        File.AppendAllText(logFile, $"An error occurred while generating the image: {ex.Message}");
+    }
+}
+
+async Task PostOnX(string text, string selectedFilePath)
+{
+    // Post text and picture on X
+    var client = new TwitterClient(
+                xConsumerKey,
+                xConsumerSecret,
+                xAccessToken,
+                xAccessTokenSecret
+            );
+
+    byte[] mediaData = File.ReadAllBytes(selectedFilePath);
+
+    dynamic? uploadedMedia = null;
+    if (selectedFilePath.EndsWith("mp4"))
+    {
+        uploadedMedia = await client.Upload.UploadTweetVideoAsync(mediaData.ToArray());
+    }
+    else
+    {
+        uploadedMedia = await client.Upload.UploadTweetImageAsync(mediaData.ToArray());
+    }
+
+    // Check if the image upload was successful
+    if (uploadedMedia != null)
+    {
+        var xPostRequest = new XPostRequest
+        {
+            Text = text,
+            media = new mediaIDS()
+            {
+                media_ids = [uploadedMedia.Id.ToString()],
+            },
+
+        };
+
+        var poster = new XService(client);
+        // Send tweet request to Twitter API
+        var result = await poster.PostX(xPostRequest);
+
+        // Check if the tweet was successfully posted
+        if (result.Response.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"You published the x post. {result.Content}");
+            File.AppendAllText(logFile, $"You published the x post. {result.Content}");
+        }
+        else
+        {
+            Console.WriteLine($"Error when posting x post: {result.Content}");
+            File.AppendAllText(logFile, $"Error when posting x post: {result.Content}");
+        }
+    }
+    else
+    {
+        Console.WriteLine("Error when uploading image.");
+        File.AppendAllText(logFile, "Error when uploading image.");
     }
 }
 
