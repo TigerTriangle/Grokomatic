@@ -16,10 +16,12 @@ string xConsumerKey;
 string xConsumerSecret;
 string xAccessToken;
 string xAccessTokenSecret;
+string pageAccessToken;
+string pageId;
 
 try
 {
-    Initialize();
+    Initialize();    
 
     string postText = GeneratePost();
     File.WriteAllText(txtFile, postText);
@@ -34,7 +36,11 @@ try
     await PostOnX(postText, jpgFile);
 
     // Post text and picture on Facebook
-    // Append selected innovation to list of completions and write to Completions file
+    var fbPost = new FacebookService();
+    await fbPost.PostOnFacebook(postText, jpgFile, pageAccessToken, pageId);
+
+    // Post text and picture on Instagram
+
 }
 catch (Exception ex)
 {
@@ -49,6 +55,8 @@ void Initialize()
     xConsumerSecret = Utilities.GetEnvironmentVariable("X_API_SECRET");
     xAccessToken = Utilities.GetEnvironmentVariable("X_ACCESS_TOKEN");
     xAccessTokenSecret = Utilities.GetEnvironmentVariable("X_ACCESS_TOKEN_SECRET");
+    pageAccessToken = Utilities.GetEnvironmentVariable("FACEBOOK_PAGE_ACCESS_TOKEN");
+    pageId = Utilities.GetEnvironmentVariable("FACEBOOK_PAGE_ID");
 
     basePath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\Grokomatic";
     string fileName = DateTime.Now.ToString("yyyyMMddHHmmss");
