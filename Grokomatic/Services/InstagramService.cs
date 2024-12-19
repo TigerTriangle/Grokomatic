@@ -11,6 +11,13 @@ namespace Grokomatic.Services
 {
     public class InstagramService
     {
+        /// <summary>
+        /// Posts a social media post on Instagram.
+        /// </summary>
+        /// <param name="socialPost">The social post containing the text and image to be posted.</param>
+        /// <param name="appConfig">The application configuration containing Instagram credentials and other settings.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
+        /// <exception cref="Exception">Thrown when the BasePath in appConfig is null.</exception>
         public async Task PostOnInstagram(SocialPost socialPost, AppConfiguration appConfig)
         {
             if (appConfig.BasePath == null) throw new Exception("BasePath is null.");
@@ -34,7 +41,7 @@ namespace Grokomatic.Services
             try
             {
                 if (File.Exists(stateFile))
-                {                    
+                {
                     Log.Logger.Information("Instagram is loading state from file");
                     using (var fs = File.OpenRead(stateFile))
                     {

@@ -7,6 +7,12 @@ namespace Grokomatic
 {
     static class Utilities
     {
+        /// <summary>
+        /// Retrieves the value of the specified environment variable.
+        /// </summary>
+        /// <param name="variableName">The name of the environment variable to retrieve.</param>
+        /// <returns>The value of the specified environment variable.</returns>
+        /// <exception cref="Exception">Thrown when the specified environment variable is not found or is empty.</exception>
         public static string GetEnvironmentVariable(string variableName)
         {
             string? variable = Environment.GetEnvironmentVariable(variableName);

@@ -15,6 +15,12 @@ namespace Grokomatic.Services
             _grokTextService = grokTextService;
         }
 
+        /// <summary>
+        /// Generates a social media post text based on a random innovation from the innovations pool.
+        /// </summary>
+        /// <param name="appConfig">The application configuration containing necessary API keys and file paths.</param>
+        /// <returns>The generated social media post text.</returns>
+        /// <exception cref="Exception">Thrown when the GrokApiKey is null.</exception>
         public string GeneratePostText(AppConfiguration appConfig)
         {
             if (appConfig.GrokApiKey == null) throw new Exception("GrokApiKey is null.");
@@ -53,12 +59,19 @@ namespace Grokomatic.Services
 
             // Write serialized list of previouslyPosted to completions file in JSON format
             File.WriteAllText(completionsPath, JsonConvert.SerializeObject(previouslyPosted, Formatting.Indented));
-                        
+
             Log.Logger.Information("[ASSISTANT] {0}", textForPost);
-            
+
             return textForPost;
         }
 
+        /// <summary>
+        /// Generates an image prompt for an AI image generator based on the provided raw text.
+        /// </summary>
+        /// <param name="rawText">The raw text to base the image prompt on.</param>
+        /// <param name="appConfig">The application configuration containing necessary API keys.</param>
+        /// <returns>The generated image prompt.</returns>
+        /// <exception cref="Exception">Thrown when the GrokApiKey is null.</exception>
         public string GenerateImagePrompt(string rawText, AppConfiguration appConfig)
         {
             if (appConfig.GrokApiKey == null) throw new Exception("GrokApiKey is null.");
@@ -75,6 +88,14 @@ namespace Grokomatic.Services
             return imagePrompt;
         }
 
+        /// <summary>
+        /// Generates an image based on the provided image prompt and saves it to a specified file path.
+        /// </summary>
+        /// <param name="imagePrompt">The prompt text to generate the image from.</param>
+        /// <param name="appConfig">The application configuration containing necessary API keys and file paths.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        /// <exception cref="Exception">Thrown when the OpenAiApiKey or PngFile path is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when the imagePrompt is null or empty.</exception>
         public async Task GenerateImage(string imagePrompt, AppConfiguration appConfig)
         {
             if (appConfig.OpenAiApiKey == null) throw new Exception("OpenAiApiKey is null.");
@@ -96,6 +117,6 @@ namespace Grokomatic.Services
             {
                 Log.Logger.Error("An error occurred while generating the image: {0}", ex.Message);
             }
-        }        
+        }
     }
 }
