@@ -47,7 +47,7 @@ try
             Log.Logger.Information($"Argument={arg} was passed in.");
             if (arg.Equals("batch", StringComparison.OrdinalIgnoreCase))
             {
-                //exitCode = await serviceProvider.GetRequiredService<EmployeeSyncService>().SyncEmployees();
+                await PostOnAllPlatforms();
                 break;
             }
             else
@@ -111,29 +111,24 @@ async Task ShowMenu()
         {
             case "1":
                 await PostOnAllPlatforms();
-                exitCode = 0;
                 i = MAX_RETRIES + 1;
                 break;
             case "2":
                 await GeneratePost();
-                exitCode = 0;
                 break;
             case "3":
                 var socialPost = await GeneratePost();
                 await serviceProvider.GetRequiredService<XService>().PostOnX(socialPost, appConfig);
-                exitCode = 0;
                 i = MAX_RETRIES + 1;
                 break;
             case "4":
                 var socialPost2 = await GeneratePost();
                 await serviceProvider.GetRequiredService<FacebookService>().PostOnFacebook(socialPost2, appConfig);
-                exitCode = 0;
                 i = MAX_RETRIES + 1;
                 break;
             case "5":
                 var socialPost3 = await GeneratePost();
                 await serviceProvider.GetRequiredService<InstagramService>().PostOnInstagram(socialPost3, appConfig);
-                exitCode = 0;
                 i = MAX_RETRIES + 1;
                 break;
             default:
@@ -143,7 +138,6 @@ async Task ShowMenu()
                     Console.WriteLine("Max retries. Program exiting in 3 seconds.");
                     Console.WriteLine("\n");
                     await Task.Delay(3000);
-                    exitCode = 0;
                     return;
                 }
                 else
