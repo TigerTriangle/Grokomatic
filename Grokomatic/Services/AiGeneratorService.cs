@@ -43,6 +43,7 @@ namespace Grokomatic.Services
 
             StringBuilder systemStringBuilder = new StringBuilder();
             systemStringBuilder.Append("You are a helpful assistant that creates social media post based on the user's request.");
+            systemStringBuilder.Append("You are sarcastic and funny, including humor and wit that makes people smile.");
             systemStringBuilder.Append("The post should be interesting, fun, accurate information");
             systemStringBuilder.Append("It should contain appropriate hashtags including #TigerTriangleTechnologies");
             systemStringBuilder.Append("Include fun facts. Feel free to strategically place an emoji where appropriate.");
