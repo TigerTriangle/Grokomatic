@@ -1,5 +1,6 @@
 ﻿using Grokomatic.Models;
 using Newtonsoft.Json;
+using OpenAI.Chat;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 
@@ -87,6 +88,17 @@ namespace Grokomatic
 
                 image.Save(outputFilePath, encoder);
             }
+        }
+
+
+        /// <summary>
+        /// Removes Markdown formatting from the given text.
+        /// </summary>
+        /// <param name="text">The text to be processed.</param>
+        /// <returns>A string with Markdown formatting removed.</returns>
+        public static string RemoveMarkdownFormatting(string text)
+        {
+            return text.Replace("**", "").Replace("__", "");
         }
     }
 }

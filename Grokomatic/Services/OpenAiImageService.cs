@@ -1,4 +1,6 @@
-﻿using OpenAI.Images;
+﻿using Grokomatic.Configs;
+using OpenAI.Images;
+using Tweetinvi.Core.Extensions;
 
 namespace Grokomatic.Services
 {
@@ -8,12 +10,13 @@ namespace Grokomatic.Services
         /// Generates an image based on the provided prompt and saves it to the specified file path.
         /// </summary>
         /// <param name="prompt">The text prompt to generate the image from.</param>
-        /// <param name="filePath">The file path where the generated image will be saved.</param>
-        /// <param name="apiKey">The API key used to authenticate with the OpenAI service.</param>
+        /// <param name="appConfig">The application configuration containing the OpenAI API key and PNG file path.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        public async Task GenerateImage(string prompt, string filePath, string apiKey)
+        public async Task GenerateImage(string prompt, AppConfiguration appConfig)
         {
-            ImageClient client = new("dall-e-3", apiKey);
+            if (string.IsNullOrEmpty(appConfig.PngFile)) throw new Exception("PngFile path must be specified.");
+
+            ImageClient client = new("dall-e-3", appConfig.OpenAiApiKey);
 
             ImageGenerationOptions options = new()
             {
@@ -26,7 +29,7 @@ namespace Grokomatic.Services
             GeneratedImage image = await client.GenerateImageAsync(prompt, options);
             BinaryData bytes = image.ImageBytes;
 
-            await File.WriteAllBytesAsync(filePath, bytes.ToArray());
+            await File.WriteAllBytesAsync(appConfig.PngFile, bytes.ToArray());
         }
     }
 }

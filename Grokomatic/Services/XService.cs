@@ -13,7 +13,7 @@ namespace Grokomatic.Services
         /// Posts text and picture on X (formerly Twitter).
         /// </summary>
         /// <param name="socialPost">The social post containing text and image to be posted.</param>
-        /// <param name="appConfig">The application configuration containing API keys and tokens.</param>
+        /// <param name="appConfig">The application configuration containing API keys and tokens for X.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         public async Task PostOnX(SocialPost socialPost, AppConfiguration appConfig)
         {

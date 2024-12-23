@@ -35,9 +35,10 @@ namespace Grokomatic.Services
             // Generate text
             ChatCompletion completion = client.CompleteChat(messages, completionOptions);
 
-            // Remove markdown formatting from the text
-            string textForPost = completion.Content[0].Text.Replace("**", "").Replace("__", "");
+            string textForPost = Utilities.RemoveMarkdownFormatting(completion.Content[0].Text);
             return textForPost;
         }
+
+        
     }
 }
