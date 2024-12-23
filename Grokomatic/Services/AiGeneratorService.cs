@@ -110,7 +110,7 @@ namespace Grokomatic.Services
             var imageGenerator = new OpenAiImageService();
             try
             {
-                await imageGenerator.GenerateImage(imagePrompt, appConfig.PngFile, appConfig.OpenAiApiKey);
+                await imageGenerator.GenerateImage(imagePrompt, appConfig);
 
                 Log.Logger.Information("Image generated successfully and saved to {0}", appConfig.PngFile);
             }

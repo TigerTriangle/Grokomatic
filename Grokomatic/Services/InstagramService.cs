@@ -33,7 +33,7 @@ namespace Grokomatic.Services
             // create new InstaApi instance using Builder
             IInstaApi instaApi = InstaApiBuilder.CreateBuilder()
                 .SetUser(userSession)
-                .UseLogger(new DebugLogger(LogLevel.All)) // use logger for requests and debug messages
+                .UseLogger(new DebugLogger(LogLevel.Exceptions))
                 .SetRequestDelay(delay)
                 .Build();
 

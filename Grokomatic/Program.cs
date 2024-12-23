@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Grokomatic.Configs;
 
 string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+const int MAX_RETRIES = 3;
 
 IConfigurationRoot configuration = new ConfigurationBuilder()
         .SetBasePath(Directory.GetCurrentDirectory())
@@ -47,8 +48,12 @@ try
             Log.Logger.Information($"Argument={arg} was passed in.");
             if (arg.Equals("batch", StringComparison.OrdinalIgnoreCase))
             {
-                await PostOnAllPlatforms();
-                break;
+                using (var scope = serviceProvider.CreateScope())
+                {
+                    var scopedServiceProvider = scope.ServiceProvider;
+                    await PostOnAllPlatforms(scopedServiceProvider);
+                    break;
+                }
             }
             else
             {
@@ -72,21 +77,16 @@ finally
     Log.CloseAndFlush();
 }
 
-if (exitCode == 0)
-{
-    WrapUp();
-}
-
 Environment.Exit(exitCode);
 
 void ConfigureServices(IServiceCollection services, IConfiguration configuration)
 {
-    services.AddTransient<AiGeneratorService>();
-    services.AddTransient<FacebookService>();
-    services.AddTransient<GrokTextService>();
-    services.AddTransient<InstagramService>();
-    services.AddTransient<OpenAiImageService>();
-    services.AddTransient<XService>();
+    services.AddScoped<AiGeneratorService>();
+    services.AddScoped<FacebookService>();
+    services.AddScoped<GrokTextService>();
+    services.AddScoped<InstagramService>();
+    services.AddScoped<OpenAiImageService>();
+    services.AddScoped<XService>();
     services.AddSingleton(configuration);
 }
 
@@ -102,50 +102,60 @@ async Task ShowMenu()
     Console.WriteLine("Please choose an option from the menu:");
 
     int i = 0;
-    const int MAX_RETRIES = 3;
-    while (i <= MAX_RETRIES)
-    {
-        string? userChoice = Console.ReadLine();
 
-        switch (userChoice)
+    using (var scope = serviceProvider.CreateScope())
+    {
+        var scopedServiceProvider = scope.ServiceProvider;
+
+        while (i <= MAX_RETRIES)
         {
-            case "1":
-                await PostOnAllPlatforms();
-                i = MAX_RETRIES + 1;
-                break;
-            case "2":
-                await GeneratePost();
-                break;
-            case "3":
-                var socialPost = await GeneratePost();
-                await serviceProvider.GetRequiredService<XService>().PostOnX(socialPost, appConfig);
-                i = MAX_RETRIES + 1;
-                break;
-            case "4":
-                var socialPost2 = await GeneratePost();
-                await serviceProvider.GetRequiredService<FacebookService>().PostOnFacebook(socialPost2, appConfig);
-                i = MAX_RETRIES + 1;
-                break;
-            case "5":
-                var socialPost3 = await GeneratePost();
-                await serviceProvider.GetRequiredService<InstagramService>().PostOnInstagram(socialPost3, appConfig);
-                i = MAX_RETRIES + 1;
-                break;
-            default:
-                i++;
-                if (i > MAX_RETRIES)
-                {
-                    Console.WriteLine("Max retries. Program exiting in 3 seconds.");
-                    Console.WriteLine("\n");
-                    await Task.Delay(3000);
-                    return;
-                }
-                else
-                {
-                    Console.WriteLine("Invalid choice. Please try again.");
-                    Console.WriteLine("\n");
-                }
-                break;
+            string? userChoice = Console.ReadLine();
+            if (userChoice == null)
+            {
+                Console.WriteLine("Invalid choice. Please try again.");
+                continue;
+            }
+
+            switch (userChoice)
+            {
+                case "1":
+                    await PostOnAllPlatforms(scopedServiceProvider);
+                    i = MAX_RETRIES + 1;
+                    break;
+                case "2":
+                    await GeneratePost(scopedServiceProvider);
+                    break;
+                case "3":
+                    var socialPost = await GeneratePost(scopedServiceProvider);
+                    await scopedServiceProvider.GetRequiredService<XService>().PostOnX(socialPost, appConfig);
+                    i = MAX_RETRIES + 1;
+                    break;
+                case "4":
+                    var socialPost2 = await GeneratePost(scopedServiceProvider);
+                    await scopedServiceProvider.GetRequiredService<FacebookService>().PostOnFacebook(socialPost2, appConfig);
+                    i = MAX_RETRIES + 1;
+                    break;
+                case "5":
+                    var socialPost3 = await GeneratePost(scopedServiceProvider);
+                    await scopedServiceProvider.GetRequiredService<InstagramService>().PostOnInstagram(socialPost3, appConfig);
+                    i = MAX_RETRIES + 1;
+                    break;
+                default:
+                    i++;
+                    if (i > MAX_RETRIES)
+                    {
+                        Console.WriteLine("Max retries. Program exiting in 3 seconds.");
+                        Console.WriteLine("\n");
+                        await Task.Delay(3000);
+                        return;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid choice. Please try again.");
+                        Console.WriteLine("\n");
+                    }
+                    break;
+            }
         }
     }
 }
@@ -166,24 +176,18 @@ void Initialize(AppConfiguration appConfig)
     appConfig.JpgFile = Path.Combine(appConfig.BasePath, $"{fileName}.jpg");
 }
 
-void WrapUp()
+async Task PostOnAllPlatforms(IServiceProvider scopedServiceProvider)
 {
-    Console.WriteLine("Thanks for using Grokomatic!");
-    Console.ReadLine();
+    var socialPost = await GeneratePost(scopedServiceProvider);
+    await scopedServiceProvider.GetRequiredService<XService>().PostOnX(socialPost, appConfig);
+    await scopedServiceProvider.GetRequiredService<FacebookService>().PostOnFacebook(socialPost, appConfig);
+    await scopedServiceProvider.GetRequiredService<InstagramService>().PostOnInstagram(socialPost, appConfig);
 }
 
-async Task PostOnAllPlatforms()
+async Task<SocialPost> GeneratePost(IServiceProvider scopedServiceProvider)
 {
-    var socialPost = await GeneratePost();
-    await serviceProvider.GetRequiredService<XService>().PostOnX(socialPost, appConfig);
-    await serviceProvider.GetRequiredService<FacebookService>().PostOnFacebook(socialPost, appConfig);
-    await serviceProvider.GetRequiredService<InstagramService>().PostOnInstagram(socialPost, appConfig);
-}
-
-async Task<SocialPost> GeneratePost()
-{
-    string postText = serviceProvider.GetRequiredService<AiGeneratorService>().GeneratePostText(appConfig);
-    Log.Logger.Information("postText");
+    string postText = scopedServiceProvider.GetRequiredService<AiGeneratorService>().GeneratePostText(appConfig);
+    Log.Logger.Information(postText);
 
     if (appConfig.TxtFile != null)
     {
@@ -194,14 +198,13 @@ async Task<SocialPost> GeneratePost()
         Log.Logger.Error("TxtFile path is null.");
     }
 
-    string imagePrompt = serviceProvider.GetRequiredService<AiGeneratorService>().GenerateImagePrompt(postText, appConfig);
+    string imagePrompt = scopedServiceProvider.GetRequiredService<AiGeneratorService>().GenerateImagePrompt(postText, appConfig);
 
-    await serviceProvider.GetRequiredService<AiGeneratorService>().GenerateImage(imagePrompt, appConfig);
+    await scopedServiceProvider.GetRequiredService<AiGeneratorService>().GenerateImage(imagePrompt, appConfig);
 
     if (appConfig.PngFile == null)
     {
         throw new Exception("PngFile path is null.");
-        
     }
 
     if (appConfig.JpgFile == null)
