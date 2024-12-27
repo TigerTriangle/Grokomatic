@@ -13,16 +13,16 @@ namespace Grokomatic.Services
         /// Posts text and picture on X (formerly Twitter).
         /// </summary>
         /// <param name="socialPost">The social post containing text and image to be posted.</param>
-        /// <param name="appConfig">The application configuration containing API keys and tokens for X.</param>
+        /// <param name="xConfig">The configuration containing API keys and tokens for X.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task PostOnX(SocialPost socialPost, AppConfiguration appConfig)
+        public async Task PostOnX(SocialPost socialPost, XConfig xConfig)
         {
             // Post text and picture on X
             var client = new TwitterClient(
-                        appConfig.XConsumerKey,
-                        appConfig.XConsumerSecret,
-                        appConfig.XAccessToken,
-                        appConfig.XAccessTokenSecret);
+                        xConfig.ConsumerKey,
+                        xConfig.ConsumerSecret,
+                        xConfig.AccessToken,
+                        xConfig.AccessTokenSecret);
 
             byte[] mediaData = File.ReadAllBytes(socialPost.PostImage);
 

@@ -1,29 +1,35 @@
-﻿using OpenAI;
+﻿using Grokomatic.Configs;
+using OpenAI;
 using OpenAI.Chat;
 using System.ClientModel;
+using Tweetinvi.Core.Extensions;
 
 namespace Grokomatic.Services
 {
-    public class GrokTextService
+    public class TextService
     {
         /// <summary>
-        /// Uses Grok to generate text based on the provided system and user prompts using the OpenAI API.
+        /// Uses an OpenAI compatible API to generate text based on the provided system and user prompts.
         /// </summary>
         /// <param name="systemPrompt">The system prompt to guide the AI's behavior.</param>
         /// <param name="userPrompt">The user prompt to provide context or questions for the AI.</param>
-        /// <param name="apiKey">The API key for authenticating with the Grok API.</param>
+        /// <param name="aiConfig">The configuration for the OpenAI compatible API.</param>
         /// <returns>A string containing the generated text with markdown formatting removed.</returns>
-        public string GenerateText(string systemPrompt, string userPrompt, string apiKey)
+        public string GenerateText(string systemPrompt, string userPrompt, IAiConfig aiConfig)
         {
+            if (aiConfig.Endpoint == null) throw new ArgumentNullException(nameof(aiConfig.Endpoint), "Endpoint cannot be null");
+
+            if (aiConfig.ApiKey == null) throw new ArgumentNullException(nameof(aiConfig.ApiKey), "API Key cannot be null");
+
             OpenAIClientOptions options = new OpenAIClientOptions();
-            options.Endpoint = new Uri("https://api.x.ai/v1");
-            ChatClient client = new(model: "grok-beta", new ApiKeyCredential(apiKey), options);
+            if (!aiConfig.Endpoint.IsNullOrEmpty()) options.Endpoint = new Uri(aiConfig.Endpoint);
+            ChatClient client = new(aiConfig.Model, new ApiKeyCredential(aiConfig.ApiKey), options);
 
             var messages = new List<ChatMessage>
-                {
-                    new SystemChatMessage(systemPrompt),
-                    new UserChatMessage(userPrompt)
-                };
+                        {
+                            new SystemChatMessage(systemPrompt),
+                            new UserChatMessage(userPrompt)
+                        };
 
             //The sampling temperature, between 0 and 1. Higher values like 0.8 will make the output more random,
             //while lower values like 0.2 will make it more focused and deterministic.
@@ -38,7 +44,5 @@ namespace Grokomatic.Services
             string textForPost = Utilities.RemoveMarkdownFormatting(completion.Content[0].Text);
             return textForPost;
         }
-
-        
     }
 }

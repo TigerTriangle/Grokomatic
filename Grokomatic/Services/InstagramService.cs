@@ -15,18 +15,21 @@ namespace Grokomatic.Services
         /// Posts a social media post on Instagram.
         /// </summary>
         /// <param name="socialPost">The social post containing the text and image to be posted.</param>
-        /// <param name="appConfig">The application configuration containing Instagram credentials and other settings.</param>
+        /// <param name="instagramConfig">The configuration containing Instagram credentials and other settings.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        /// <exception cref="Exception">Thrown when the BasePath in appConfig is null.</exception>
-        public async Task PostOnInstagram(SocialPost socialPost, AppConfiguration appConfig)
+        /// <exception cref="Exception">Thrown when the basePath is null or empty.</exception>
+        public async Task PostOnInstagram(SocialPost socialPost, InstagramConfig instagramConfig, string basePath)
         {
-            if (appConfig.BasePath == null) throw new Exception("BasePath is null.");
+            if (string.IsNullOrEmpty(basePath))
+            {
+                throw new ArgumentNullException(nameof(basePath), "BasePath is required.");
+            }
 
             // create user session data and provide login details
             var userSession = new UserSessionData
             {
-                UserName = appConfig.InstagramUsername,
-                Password = appConfig.InstagramPassword
+                UserName = instagramConfig.Username,
+                Password = instagramConfig.Password
             };
 
             var delay = RequestDelay.FromSeconds(2, 2);
@@ -37,7 +40,7 @@ namespace Grokomatic.Services
                 .SetRequestDelay(delay)
                 .Build();
 
-            string stateFile = Path.Combine(appConfig.BasePath, "state.bin");
+            string stateFile = Path.Combine(basePath, "state.bin");
             try
             {
                 if (File.Exists(stateFile))
