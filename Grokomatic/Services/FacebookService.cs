@@ -12,9 +12,9 @@ namespace Grokomatic.Services
         /// Posts a social media post on Facebook.
         /// </summary>
         /// <param name="socialPost">The social post containing the text and image to be posted.</param>
-        /// <param name="appConfig">The application configuration containing Facebook page details and access token.</param>
+        /// <param name="appConfig">The configuration containing Facebook page details and access token.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        public async Task PostOnFacebook(SocialPost socialPost, AppConfiguration appConfig)
+        public async Task PostOnFacebook(SocialPost socialPost, FacebookConfig facebookConfig)
         {
             using var httpClient = new HttpClient();
 
@@ -24,7 +24,7 @@ namespace Grokomatic.Services
                 { new ByteArrayContent(File.ReadAllBytes(socialPost.PostImage)), "source", "photo.jpg" }
             };
 
-            var response = await httpClient.PostAsync($"https://graph.facebook.com/{appConfig.FbPageId}/photos?access_token={appConfig.FbPageAccessToken}", formData);
+            var response = await httpClient.PostAsync($"https://graph.facebook.com/{facebookConfig.PageId}/photos?access_token={facebookConfig.PageAccessToken}", formData);
             var responseString = await response.Content.ReadAsStringAsync();
             var jsonResponse = JObject.Parse(responseString);
             var facebookResponse = JsonConvert.DeserializeObject<FacebookResponse>(responseString);

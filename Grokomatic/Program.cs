@@ -34,10 +34,27 @@ var serviceProvider = services.BuildServiceProvider();
 
 int exitCode = 0;
 
-AppConfiguration appConfig = new AppConfiguration();
-configuration.GetSection("AppConfiguration").Bind(appConfig);
+#region Load Configurations
 
-Initialize(appConfig);
+AppConfig appConfig = new();
+Initialize();
+
+OpenAiConfig openAiConfig = new();
+configuration.GetSection("OpenAiConfig").Bind(openAiConfig);
+
+GrokConfig grokConfig = new();
+configuration.GetSection("GrokConfig").Bind(grokConfig);
+
+XConfig xConfig = new();
+configuration.GetSection("XConfig").Bind(xConfig);
+
+FacebookConfig facebookConfig = new();
+configuration.GetSection("FacebookConfig").Bind(facebookConfig);
+
+InstagramConfig instagramConfig = new();
+configuration.GetSection("InstagramConfig").Bind(instagramConfig);
+
+#endregion
 
 try
 {
@@ -83,9 +100,9 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
 {
     services.AddScoped<AiGeneratorService>();
     services.AddScoped<FacebookService>();
-    services.AddScoped<GrokTextService>();
+    services.AddScoped<TextService>();
     services.AddScoped<InstagramService>();
-    services.AddScoped<OpenAiImageService>();
+    services.AddScoped<ImageService>();
     services.AddScoped<XService>();
     services.AddSingleton(configuration);
 }
@@ -127,17 +144,24 @@ async Task ShowMenu()
                     break;
                 case "3":
                     var socialPost = await GeneratePost(scopedServiceProvider);
-                    await scopedServiceProvider.GetRequiredService<XService>().PostOnX(socialPost, appConfig);
+                    await scopedServiceProvider.GetRequiredService<XService>().PostOnX(socialPost, xConfig);
                     i = MAX_RETRIES + 1;
                     break;
                 case "4":
                     var socialPost2 = await GeneratePost(scopedServiceProvider);
-                    await scopedServiceProvider.GetRequiredService<FacebookService>().PostOnFacebook(socialPost2, appConfig);
+                    await scopedServiceProvider.GetRequiredService<FacebookService>().PostOnFacebook(socialPost2, facebookConfig);
                     i = MAX_RETRIES + 1;
                     break;
                 case "5":
                     var socialPost3 = await GeneratePost(scopedServiceProvider);
-                    await scopedServiceProvider.GetRequiredService<InstagramService>().PostOnInstagram(socialPost3, appConfig);
+                    if (appConfig.BasePath != null)
+                    {
+                        await scopedServiceProvider.GetRequiredService<InstagramService>().PostOnInstagram(socialPost3, instagramConfig, appConfig.BasePath);
+                    }
+                    else
+                    {
+                        Log.Logger.Error("BasePath is null.");
+                    }
                     i = MAX_RETRIES + 1;
                     break;
                 default:
@@ -160,7 +184,7 @@ async Task ShowMenu()
     }
 }
 
-void Initialize(AppConfiguration appConfig)
+void Initialize()
 {
     appConfig.BasePath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\Grokomatic";
     
@@ -179,14 +203,21 @@ void Initialize(AppConfiguration appConfig)
 async Task PostOnAllPlatforms(IServiceProvider scopedServiceProvider)
 {
     var socialPost = await GeneratePost(scopedServiceProvider);
-    await scopedServiceProvider.GetRequiredService<XService>().PostOnX(socialPost, appConfig);
-    await scopedServiceProvider.GetRequiredService<FacebookService>().PostOnFacebook(socialPost, appConfig);
-    await scopedServiceProvider.GetRequiredService<InstagramService>().PostOnInstagram(socialPost, appConfig);
+    await scopedServiceProvider.GetRequiredService<XService>().PostOnX(socialPost, xConfig);
+    await scopedServiceProvider.GetRequiredService<FacebookService>().PostOnFacebook(socialPost, facebookConfig);
+    if (appConfig.BasePath != null)
+    {
+        await scopedServiceProvider.GetRequiredService<InstagramService>().PostOnInstagram(socialPost, instagramConfig, appConfig.BasePath);
+    }
+    else
+    {
+        Log.Logger.Error("BasePath is null.");
+    }
 }
 
 async Task<SocialPost> GeneratePost(IServiceProvider scopedServiceProvider)
 {
-    string postText = scopedServiceProvider.GetRequiredService<AiGeneratorService>().GeneratePostText(appConfig);
+    string postText = scopedServiceProvider.GetRequiredService<AiGeneratorService>().GeneratePostText(grokConfig);
     Log.Logger.Information(postText);
 
     if (appConfig.TxtFile != null)
@@ -198,14 +229,14 @@ async Task<SocialPost> GeneratePost(IServiceProvider scopedServiceProvider)
         Log.Logger.Error("TxtFile path is null.");
     }
 
-    string imagePrompt = scopedServiceProvider.GetRequiredService<AiGeneratorService>().GenerateImagePrompt(postText, appConfig);
-
-    await scopedServiceProvider.GetRequiredService<AiGeneratorService>().GenerateImage(imagePrompt, appConfig);
+    string imagePrompt = scopedServiceProvider.GetRequiredService<AiGeneratorService>().GenerateImagePrompt(postText, grokConfig);
 
     if (appConfig.PngFile == null)
     {
         throw new Exception("PngFile path is null.");
     }
+
+    await scopedServiceProvider.GetRequiredService<AiGeneratorService>().GenerateImage(imagePrompt, openAiConfig, appConfig.PngFile);
 
     if (appConfig.JpgFile == null)
     {
