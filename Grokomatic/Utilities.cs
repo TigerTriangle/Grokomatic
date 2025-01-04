@@ -8,6 +8,8 @@ namespace Grokomatic
 {
     static class Utilities
     {
+        public static int AppStatus { get; set; } = 0;
+
         /// <summary>
         /// Retrieves the value of the specified environment variable.
         /// </summary>
