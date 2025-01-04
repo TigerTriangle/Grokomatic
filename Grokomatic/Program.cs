@@ -107,6 +107,22 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     services.AddSingleton(configuration);
 }
 
+void Initialize()
+{
+    appConfig.BasePath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\Grokomatic";
+
+    string fileName = DateTime.Now.ToString("yyyyMMddHHmmss");
+
+    if (!Directory.Exists(appConfig.BasePath))
+    {
+        Directory.CreateDirectory(appConfig.BasePath);
+    }
+
+    appConfig.TxtFile = Path.Combine(appConfig.BasePath, $"{fileName}.txt");
+    appConfig.PngFile = Path.Combine(appConfig.BasePath, $"{fileName}.png");
+    appConfig.JpgFile = Path.Combine(appConfig.BasePath, $"{fileName}.jpg");
+}
+
 async Task ShowMenu()
 {
     Console.Clear();
@@ -184,22 +200,6 @@ async Task ShowMenu()
     }
 }
 
-void Initialize()
-{
-    appConfig.BasePath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\Grokomatic";
-    
-    string fileName = DateTime.Now.ToString("yyyyMMddHHmmss");
-
-    if (!Directory.Exists(appConfig.BasePath))
-    {
-        Directory.CreateDirectory(appConfig.BasePath);
-    }
-
-    appConfig.TxtFile = Path.Combine(appConfig.BasePath, $"{fileName}.txt");
-    appConfig.PngFile = Path.Combine(appConfig.BasePath, $"{fileName}.png");
-    appConfig.JpgFile = Path.Combine(appConfig.BasePath, $"{fileName}.jpg");
-}
-
 async Task PostOnAllPlatforms(IServiceProvider scopedServiceProvider)
 {
     var socialPost = await GeneratePost(scopedServiceProvider);
@@ -218,6 +218,14 @@ async Task PostOnAllPlatforms(IServiceProvider scopedServiceProvider)
 async Task<SocialPost> GeneratePost(IServiceProvider scopedServiceProvider)
 {
     string postText = scopedServiceProvider.GetRequiredService<AiGeneratorService>().GeneratePostText(grokConfig);
+
+    // Exit console app if postText is null or empty
+    if (string.IsNullOrEmpty(postText))
+    {
+        Log.Logger.Error("Generated post text is null or empty. Exiting application.");
+        Environment.Exit(0);
+    }
+
     Log.Logger.Information(postText);
 
     if (appConfig.TxtFile != null)

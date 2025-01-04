@@ -29,17 +29,18 @@ namespace Grokomatic.Services
             dynamic? uploadedMedia = null;
             if (socialPost.PostImage.EndsWith("mp4"))
             {
-                uploadedMedia = await client.Upload.UploadTweetVideoAsync(mediaData.ToArray());
+                uploadedMedia = await client.Upload.UploadTweetVideoAsync(mediaData);
             }
             else
             {
-                uploadedMedia = await client.Upload.UploadTweetImageAsync(mediaData.ToArray());
+                uploadedMedia = await client.Upload.UploadTweetImageAsync(mediaData);
             }
 
             // Check if the image upload was successful
             if (uploadedMedia == null)
             {
                 Log.Logger.Error("Error when uploading image.");
+                throw new Exception("Error when uploading image.");
             }
 
             var xPostRequest = new XPostRequest
