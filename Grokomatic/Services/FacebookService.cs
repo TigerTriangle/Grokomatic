@@ -20,9 +20,13 @@ namespace Grokomatic.Services
 
             var formData = new MultipartFormDataContent
             {
-                { new StringContent(socialPost.PostText), "message" },
-                { new ByteArrayContent(File.ReadAllBytes(socialPost.PostImage)), "source", "photo.jpg" }
+                { new StringContent(socialPost.PostText), "message" }
             };
+
+            if (!string.IsNullOrEmpty(socialPost.PostImage))
+            {
+                formData.Add(new ByteArrayContent(File.ReadAllBytes(socialPost.PostImage)), "source", "photo.jpg");
+            }
 
             var response = await httpClient.PostAsync($"https://graph.facebook.com/{facebookConfig.PageId}/photos?access_token={facebookConfig.PageAccessToken}", formData);
             var responseString = await response.Content.ReadAsStringAsync();

@@ -15,14 +15,13 @@ namespace Grokomatic.Services
         /// <param name="userPrompt">The user prompt to provide context or questions for the AI.</param>
         /// <param name="aiConfig">The configuration for the OpenAI compatible API.</param>
         /// <returns>A string containing the generated text with markdown formatting removed.</returns>
-        public string GenerateText(string systemPrompt, string userPrompt, IAiConfig aiConfig)
+        public string GenerateText(string systemPrompt, string userPrompt, OpenAiConfig aiConfig)
         {
-            if (aiConfig.Endpoint == null) throw new ArgumentNullException(nameof(aiConfig.Endpoint), "Endpoint cannot be null");
-
-            if (aiConfig.ApiKey == null) throw new ArgumentNullException(nameof(aiConfig.ApiKey), "API Key cannot be null");
+            if (string.IsNullOrEmpty(aiConfig.ApiKey)) throw new Exception("API Key is required for AI Text generation.");
 
             OpenAIClientOptions options = new OpenAIClientOptions();
-            if (!aiConfig.Endpoint.IsNullOrEmpty()) options.Endpoint = new Uri(aiConfig.Endpoint);
+            if (!string.IsNullOrEmpty(aiConfig.Endpoint)) options.Endpoint = new Uri(aiConfig.Endpoint);
+            
             ChatClient client = new(aiConfig.Model, new ApiKeyCredential(aiConfig.ApiKey), options);
 
             var messages = new List<ChatMessage>

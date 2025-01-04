@@ -21,7 +21,7 @@ namespace Grokomatic.Services
         /// <param name="aiConfig">Configuration for the OpenAI compatible API.</param>
         /// <returns>The generated social media post text.</returns>
         /// <exception cref="Exception">Thrown when the ApiKey is null.</exception>
-        public string GeneratePostText(IAiConfig aiConfig)
+        public string GeneratePostText(OpenAiConfig aiConfig)
         {
             string innovationsPath = "Data/Innovations.json";
             string completionsPath = "Data/Completions.json";
@@ -75,7 +75,7 @@ namespace Grokomatic.Services
         /// <param name="aiConfig">Configuration for the OpenAI compatible API.</param>
         /// <returns>The generated image prompt.</returns>
         /// <exception cref="Exception">Thrown when the ApiKey is null.</exception>
-        public string GenerateImagePrompt(string rawText, IAiConfig aiConfig)
+        public string GenerateImagePrompt(string rawText, OpenAiConfig aiConfig)
         {
 
             StringBuilder systemStringBuilder = new StringBuilder();
@@ -102,7 +102,7 @@ namespace Grokomatic.Services
         /// <returns>A task representing the asynchronous operation.</returns>
         /// <exception cref="ArgumentNullException">Thrown when the image prompt or file path is null or empty.</exception>
         /// <exception cref="Exception">Thrown when an error occurs during image generation.</exception>
-        public async Task GenerateImage(string imagePrompt, IAiConfig aiConfig, string pngFilePath)
+        public async Task GenerateImage(string imagePrompt, OpenAiConfig aiConfig, string pngFilePath)
         {
             if (string.IsNullOrEmpty(imagePrompt))
             {
@@ -124,6 +124,7 @@ namespace Grokomatic.Services
             catch (Exception ex)
             {
                 Log.Logger.Error("An error occurred while generating the image: {0}", ex.Message);
+                Utilities.AppStatus = 1;
             }
         }
     }

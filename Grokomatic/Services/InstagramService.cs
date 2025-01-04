@@ -6,6 +6,7 @@ using InstagramApiSharp.Classes;
 using InstagramApiSharp.Classes.Models;
 using InstagramApiSharp.Logger;
 using Serilog;
+using Tweetinvi.Core.Extensions;
 
 namespace Grokomatic.Services
 {
@@ -23,6 +24,13 @@ namespace Grokomatic.Services
             if (string.IsNullOrEmpty(basePath))
             {
                 throw new ArgumentNullException(nameof(basePath), "BasePath is required.");
+            }
+
+            if (socialPost.PostImage.IsNullOrEmpty())
+            {
+                Log.Logger.Error("Image is required for Instagram.");
+                Utilities.AppStatus = 1;
+                return;
             }
 
             // create user session data and provide login details
@@ -55,6 +63,7 @@ namespace Grokomatic.Services
             catch (Exception e)
             {
                 Log.Logger.Error(e, "Error when reading from state file");
+                throw;
             }
 
             if (!instaApi.IsUserAuthenticated)
@@ -86,6 +95,7 @@ namespace Grokomatic.Services
                         else
                         {
                             Log.Logger.Error("Error: {0}", twoFactorLogin.Info.Message);
+                            Utilities.AppStatus = 1;
                         }
                     }
                 }
@@ -112,6 +122,7 @@ namespace Grokomatic.Services
             else
             {
                 Log.Logger.Error("Unable to upload photo: {0}", result.Info.Message);
+                Utilities.AppStatus = 1;
             }
         }
 

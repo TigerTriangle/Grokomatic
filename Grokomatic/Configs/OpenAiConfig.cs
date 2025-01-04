@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 
 namespace Grokomatic.Configs
 {
-    public class OpenAiConfig : IAiConfig
+    public class OpenAiConfig
     {
         public string? ApiKey { get; set; }
         public string? Model { get; set; }
-        public string? ImageModel { get; set; }
         public string? Endpoint { get; set; }
     }
 }

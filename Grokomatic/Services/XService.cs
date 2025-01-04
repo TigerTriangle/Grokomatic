@@ -4,6 +4,7 @@ using Tweetinvi;
 using Grokomatic.Models;
 using Serilog;
 using Grokomatic.Configs;
+using Tweetinvi.Core.Extensions;
 
 namespace Grokomatic.Services
 {
@@ -24,34 +25,37 @@ namespace Grokomatic.Services
                         xConfig.AccessToken,
                         xConfig.AccessTokenSecret);
 
-            byte[] mediaData = File.ReadAllBytes(socialPost.PostImage);
-
-            dynamic? uploadedMedia = null;
-            if (socialPost.PostImage.EndsWith("mp4"))
-            {
-                uploadedMedia = await client.Upload.UploadTweetVideoAsync(mediaData);
-            }
-            else
-            {
-                uploadedMedia = await client.Upload.UploadTweetImageAsync(mediaData);
-            }
-
-            // Check if the image upload was successful
-            if (uploadedMedia == null)
-            {
-                Log.Logger.Error("Error when uploading image.");
-                throw new Exception("Error when uploading image.");
-            }
-
             var xPostRequest = new XPostRequest
             {
-                Text = socialPost.PostText,
-                media = new mediaIDS()
+                Text = socialPost.PostText
+            };
+
+            if (!socialPost.PostImage.IsNullOrEmpty())
+            {
+                byte[] mediaData = File.ReadAllBytes(socialPost.PostImage);
+
+                dynamic? uploadedMedia = null;
+                if (socialPost.PostImage.EndsWith("mp4"))
+                {
+                    uploadedMedia = await client.Upload.UploadTweetVideoAsync(mediaData);
+                }
+                else
+                {
+                    uploadedMedia = await client.Upload.UploadTweetImageAsync(mediaData);
+                }
+
+                // Check if the image upload was successful
+                if (uploadedMedia == null)
+                {
+                    Log.Logger.Error("Error when uploading image.");
+                    throw new Exception("Error when uploading image.");
+                }
+
+                xPostRequest.media = new mediaIDS()
                 {
                     media_ids = [uploadedMedia.Id.ToString()],
-                },
-
-            };
+                };
+            }
 
             var jsonBody = client.Json.Serialize(xPostRequest);
             var result = await client.Execute.AdvanceRequestAsync((ITwitterRequest request) =>
@@ -68,6 +72,7 @@ namespace Grokomatic.Services
             else
             {
                 Log.Logger.Error("Error when posting x post: {0}", result.Content);
+                Utilities.AppStatus = 1;
             }
         }
     }

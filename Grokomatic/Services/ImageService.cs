@@ -15,14 +15,14 @@ namespace Grokomatic.Services
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="aiConfig.ApiKey"/>, <paramref name="imagePrompt"/>, or <paramref name="pngFilePath"/> is null or empty.
         /// </exception>
-        public async Task GenerateImage(string imagePrompt, IAiConfig aiConfig, string pngFilePath)
+        public async Task GenerateImage(string imagePrompt, OpenAiConfig aiConfig, string pngFilePath)
         {
-            if (string.IsNullOrEmpty(aiConfig.ApiKey)) throw new ArgumentNullException(nameof(aiConfig.ApiKey));
-            if (string.IsNullOrEmpty(aiConfig.ImageModel)) throw new ArgumentNullException(nameof(aiConfig.ImageModel));
+            if (string.IsNullOrEmpty(aiConfig.ApiKey)) throw new Exception("The API key is required for AI image generation.");
+            if (string.IsNullOrEmpty(aiConfig.Model)) throw new Exception("The model is required for AI image generation.");
             if (string.IsNullOrEmpty(imagePrompt)) throw new ArgumentNullException(nameof(imagePrompt), "Image prompt is required.");
             if (string.IsNullOrEmpty(pngFilePath)) throw new ArgumentNullException(nameof(pngFilePath), "Image file path is required.");
 
-            ImageClient client = new(aiConfig.ImageModel, aiConfig.ApiKey);
+            ImageClient client = new(aiConfig.Model, aiConfig.ApiKey);
 
             ImageGenerationOptions options = new()
             {
