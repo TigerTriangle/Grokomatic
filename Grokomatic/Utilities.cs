@@ -62,8 +62,7 @@ namespace Grokomatic
             // using a single Random instance or provide a seed to avoid predictable sequences.
             Random random = new Random();
 
-            // Next returns a number between 0 and max-1, so we add 1 to shift our range to 1-max
-            return random.Next(1, max + 1);
+            return random.Next(1, max);
         }
 
         /// <summary>

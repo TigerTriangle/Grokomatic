@@ -36,7 +36,7 @@ namespace Grokomatic.Services
                 return string.Empty;
             }
 
-            int randomNumber = Utilities.PickRandomNumber(remainingInnovations.Count - 1);
+            int randomNumber = Utilities.PickRandomNumber(remainingInnovations.Count);
             TechInnovation selectedInnovation = remainingInnovations[randomNumber - 1];
 
             StringBuilder systemStringBuilder = new StringBuilder();
