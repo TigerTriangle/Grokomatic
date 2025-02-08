@@ -9,10 +9,12 @@ namespace Grokomatic.Services
     public class AiGeneratorService
     {
         private readonly TextService _grokTextService;
+        private readonly ImageService _imageService;
 
-        public AiGeneratorService(TextService textService)
+        public AiGeneratorService(TextService textService, ImageService imageService)
         {
             _grokTextService = textService;
+            _imageService = imageService;
         }
 
         /// <summary>
@@ -114,10 +116,9 @@ namespace Grokomatic.Services
                 throw new ArgumentNullException(nameof(pngFilePath), "Image file path is required.");
             }
 
-            var imageGenerator = new ImageService();
             try
             {
-                await imageGenerator.GenerateImage(imagePrompt, aiConfig, pngFilePath);
+                await _imageService.GenerateImage(imagePrompt, aiConfig, pngFilePath);
 
                 Log.Logger.Information("Image generated successfully and saved to {0}", pngFilePath);
             }
